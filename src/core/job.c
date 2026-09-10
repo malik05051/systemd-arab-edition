@@ -721,18 +721,18 @@ static const struct {
         const char *color, *word;
 } job_done_messages[_JOB_RESULT_MAX] = {
         [JOB_DONE]        = { LOG_INFO,    ANSI_OK_COLOR,         " HALAL " },
-        [JOB_CANCELED]    = { LOG_INFO,                                     },
-        [JOB_TIMEOUT]     = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " TIME  " },
+        [JOB_CANCELED]    = { LOG_INFO,                                    },
+        [JOB_TIMEOUT]     = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " TIME " },
         [JOB_FAILED]      = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " HARAM " },
-        [JOB_DEPENDENCY]  = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "DEPEND " },
-        [JOB_SKIPPED]     = { LOG_NOTICE,  ANSI_HIGHLIGHT,        " INFO  " },
-        [JOB_INVALID]     = { LOG_INFO,                                     },
-        [JOB_ASSERT]      = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "ASSERT " },
-        [JOB_UNSUPPORTED] = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "UNSUPP " },
-        [JOB_COLLECTED]   = { LOG_INFO,                                     },
-        [JOB_ONCE]        = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " ONCE  " },
-        [JOB_FROZEN]      = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "FROZEN " },
-        [JOB_CONCURRENCY] = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "CONCUR " },
+        [JOB_DEPENDENCY]  = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "DEPEND" },
+        [JOB_SKIPPED]     = { LOG_NOTICE,  ANSI_HIGHLIGHT,        " INFO " },
+        [JOB_INVALID]     = { LOG_INFO,                                    },
+        [JOB_ASSERT]      = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "ASSERT" },
+        [JOB_UNSUPPORTED] = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "UNSUPP" },
+        [JOB_COLLECTED]   = { LOG_INFO,                                    },
+        [JOB_ONCE]        = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " ONCE " },
+        [JOB_FROZEN]      = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "FROZEN" },
+        [JOB_CONCURRENCY] = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "CONCUR" },
 };
 
 static const char* job_done_mid(JobType type, JobResult result) {
