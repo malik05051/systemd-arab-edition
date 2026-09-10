@@ -42,11 +42,25 @@ EOF
 
 TS="${SOURCE_DATE_EPOCH:-$(date +%s)}"
 
+# The packaging repository still spells the power-off command "poweroff", but we install it as
+# "bismillah", so the file lists in package_systemd() and the symlinks package_systemd-sysvcompat()
+# creates have to be renamed along with it. Both substitutions are anchored on the surrounding text
+# rather than on "poweroff" alone, so unit names such as poweroff.target are left alone.
 sed "pkg/$PKG_SUBDIR/PKGBUILD" \
     --expression "/-Dsysvinit-path=/d" \
     --expression "/-Dsysvrcnd-path=/d" \
+    --expression "/{halt,/ s/poweroff/bismillah/" \
+    --expression "/for tool in halt / s/poweroff/bismillah/" \
     --expression "s/^pkgver=.*/pkgver=$(cat meson.version)/" \
     --expression "s/^pkgrel=.*/pkgrel=$(date "+%Y%m%d%H%M%S" --date "@$TS")/" >/tmp/PKGBUILD
+
+# If the packaging repository moved those lines around, the substitutions above quietly do nothing and
+# the build fails much later with a confusing "rm: cannot remove …/poweroff" instead, so check here.
+if ! grep "bismillah" /tmp/PKGBUILD >/dev/null; then
+    echo "PKGBUILD does not mention bismillah after patching, the file lists in pkg/$PKG_SUBDIR/PKGBUILD probably changed shape" >&2
+    exit 1
+fi
+
 mount --bind /tmp/PKGBUILD "pkg/$PKG_SUBDIR/PKGBUILD"
 
 (
