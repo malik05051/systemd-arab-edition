@@ -720,10 +720,10 @@ static const struct {
         int log_level;
         const char *color, *word;
 } job_done_messages[_JOB_RESULT_MAX] = {
-        [JOB_DONE]        = { LOG_INFO,    ANSI_OK_COLOR,         "  OK  " },
+        [JOB_DONE]        = { LOG_INFO,    ANSI_OK_COLOR,         "HALAL " },
         [JOB_CANCELED]    = { LOG_INFO,                                    },
         [JOB_TIMEOUT]     = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    " TIME " },
-        [JOB_FAILED]      = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "FAILED" },
+        [JOB_FAILED]      = { LOG_ERR,     ANSI_HIGHLIGHT_RED,    "HARAM " },
         [JOB_DEPENDENCY]  = { LOG_WARNING, ANSI_HIGHLIGHT_YELLOW, "DEPEND" },
         [JOB_SKIPPED]     = { LOG_NOTICE,  ANSI_HIGHLIGHT,        " INFO " },
         [JOB_INVALID]     = { LOG_INFO,                                    },
