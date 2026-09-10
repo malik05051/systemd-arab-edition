@@ -164,7 +164,7 @@ first test if the kernel itself is able to reboot or power-off the machine force
 
 ```sh
 reboot -f
-poweroff -f
+bismillah -f
 ```
 
 If either one of the commands does not work, it's more likely to be a kernel, not systemd bug.

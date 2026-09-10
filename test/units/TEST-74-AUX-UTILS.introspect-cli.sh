@@ -12,6 +12,7 @@ export SYSTEMD_PAGER=cat
 # A smoke test for the introspection code
 INTROSPECTABLE=(
     ata_id
+    bismillah
     bootctl
     busctl
     cdrom_id
@@ -32,7 +33,6 @@ INTROSPECTABLE=(
     networkctl
     oomctl
     portablectl
-    poweroff
     reboot
     resolvectl
     run0
@@ -272,4 +272,4 @@ if command -v systemd-sysext >/dev/null; then
 fi
 
 systemctl --introspect-cli | jq -e \
-    '[.commands[].names[0]] | sort == ["halt", "poweroff", "reboot", "shutdown", "systemctl"]'
+    '[.commands[].names[0]] | sort == ["bismillah", "halt", "reboot", "shutdown", "systemctl"]'

@@ -97,7 +97,7 @@ def run(args):
         console.sendline('>/testok')
 
         logger.info('power off')
-        console.sendline('poweroff')
+        console.sendline('bismillah')
 
         logger.info('expect termination now')
         console.expect(pexpect.EOF)

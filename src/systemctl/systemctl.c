@@ -548,7 +548,7 @@ static int systemctl_parse_argv(int argc, char *argv[], int log_level_shift, cha
                         break;
 
                 OPTION_LONG("dry-run", NULL,
-                            "Only print what would be done. Currently supported by verbs: halt, poweroff, "
+                            "Only print what would be done. Currently supported by verbs: halt, bismillah, "
                             "reboot, kexec, soft-reboot, suspend, hibernate, suspend-then-hibernate, "
                             "hybrid-sleep, default, rescue, emergency, and exit."):
                         arg_dry_run = true;
@@ -891,7 +891,7 @@ int systemctl_dispatch_parse_argv(int argc, char *argv[], int log_level_shift, c
                 arg_action = ACTION_HALT;
                 return halt_parse_argv(argc, argv, log_level_shift);
 
-        } else if (invoked_as(argv, "poweroff")) {
+        } else if (invoked_as(argv, "bismillah")) {
                 arg_action = ACTION_POWEROFF;
                 return halt_parse_argv(argc, argv, log_level_shift);
 
@@ -1060,7 +1060,7 @@ VERB_SCOPE(, verb_start_system_special, "emergency",     NULL,         VERB_ANY,
            "Enter system emergency mode");
 VERB_SCOPE(, verb_start_system_special, "halt",          NULL,         VERB_ANY, 1,        VERB_ONLINE_ONLY,
            "Shut down and halt the system");
-VERB_SCOPE(, verb_start_system_special, "poweroff",      NULL,         VERB_ANY, 1,        VERB_ONLINE_ONLY,
+VERB_SCOPE(, verb_start_system_special, "bismillah",     NULL,         VERB_ANY, 1,        VERB_ONLINE_ONLY,
            "Shut down and power-off the system");
 VERB_SCOPE(, verb_start_system_special, "reboot",        NULL,         VERB_ANY, 1,        VERB_ONLINE_ONLY,
            "Shut down and reboot the system");

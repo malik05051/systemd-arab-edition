@@ -624,7 +624,7 @@
             off the system.</para>
 
             <para>Applications wanting to power off the system should not start this unit
-            directly, but should instead execute <command>systemctl poweroff</command>
+            directly, but should instead execute <command>systemctl bismillah</command>
             (possibly with the <option>--no-block</option> option) or call
             <citerefentry><refentrytitle>systemd-logind</refentrytitle><manvolnum>8</manvolnum></citerefentry>'s
             <command>org.freedesktop.login1.Manager.PowerOff</command> D-Bus method

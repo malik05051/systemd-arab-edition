@@ -316,7 +316,7 @@ static int enqueue_marked_jobs(
 
 const struct action_metadata action_table[_ACTION_MAX] = {
         [ACTION_HALT]                   = { SPECIAL_HALT_TARGET,                   "halt",                   "replace-irreversibly" },
-        [ACTION_POWEROFF]               = { SPECIAL_POWEROFF_TARGET,               "poweroff",               "replace-irreversibly" },
+        [ACTION_POWEROFF]               = { SPECIAL_POWEROFF_TARGET,               "bismillah",              "replace-irreversibly" },
         [ACTION_REBOOT]                 = { SPECIAL_REBOOT_TARGET,                 "reboot",                 "replace-irreversibly" },
         [ACTION_KEXEC]                  = { SPECIAL_KEXEC_TARGET,                  "kexec",                  "replace-irreversibly" },
         [ACTION_SOFT_REBOOT]            = { SPECIAL_SOFT_REBOOT_TARGET,            "soft-reboot",            "replace-irreversibly" },
@@ -408,7 +408,7 @@ int verb_start(int argc, char *argv[], uintptr_t _data, void *userdata) {
                 assert(action != ACTION_SLEEP);
 
                 if (action != _ACTION_INVALID) {
-                        /* A command in style "systemctl reboot", "systemctl poweroff", … */
+                        /* A command in style "systemctl reboot", "systemctl bismillah", … */
                         method = "StartUnit";
                         job_type = "start";
                         mode = action_table[action].mode;
@@ -441,7 +441,7 @@ int verb_start(int argc, char *argv[], uintptr_t _data, void *userdata) {
                         one_name = NULL;
                 }
         } else {
-                /* A SysV legacy command such as "halt", "reboot", "poweroff", … */
+                /* A SysV legacy command such as "halt", "reboot", "bismillah", … */
                 assert(arg_action >= 0 && arg_action < _ACTION_MAX);
                 assert(action_table[arg_action].target);
                 assert(action_table[arg_action].mode);

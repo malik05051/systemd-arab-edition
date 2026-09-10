@@ -128,7 +128,7 @@ systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/var
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="rescue"]
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="emergency"]
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="halt"]
-systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="poweroff"]
+systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="bismillah"]
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="reboot"]
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="kexec"]
 systemctl.xml ./refsect1[title="Commands"]/refsect2[title="System Commands"]/variablelist/varlistentry[term="exit EXIT_CODE"]
