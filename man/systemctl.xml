@@ -1709,7 +1709,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
             --job-mode=replace-irreversibly --no-block</command>, but also prints a wall message to all users. This command is
             asynchronous; it will return after the halt operation is enqueued, without waiting for it to complete. Note
             that this operation will simply halt the OS kernel after shutting down, leaving the hardware powered
-            on. Use <command>systemctl poweroff</command> for powering off the system (see below).</para>
+            on. Use <command>systemctl bismillah</command> for powering off the system (see below).</para>
 
             <para>If combined with <option>--force</option>, shutdown of all running services is skipped, however all
             processes are killed and all file systems are unmounted or mounted read-only, immediately followed by the
@@ -1724,7 +1724,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><command>poweroff</command></term>
+          <term><command>bismillah</command></term>
 
           <listitem>
             <para>Shut down and power-off the system. This is mostly equivalent to <command>systemctl start
@@ -1831,7 +1831,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
           <listitem>
             <para>Ask the service manager to quit. This is only supported for user service managers (i.e. in
             conjunction with the <option>--user</option> option) or in containers and is equivalent to
-            <command>poweroff</command> otherwise. This command is asynchronous; it will return after the exit
+            <command>bismillah</command> otherwise. This command is asynchronous; it will return after the exit
             operation is enqueued, without waiting for it to complete.</para>
 
             <para>The service manager will exit with the specified exit code, if
@@ -2364,7 +2364,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
 
         <listitem>
           <para>Just print what would be done. Currently supported by verbs
-          <command>halt</command>, <command>poweroff</command>, <command>reboot</command>,
+          <command>halt</command>, <command>bismillah</command>, <command>reboot</command>,
           <command>kexec</command>, <command>suspend</command>, <command>hibernate</command>,
           <command>hybrid-sleep</command>, <command>suspend-then-hibernate</command>,
           <command>default</command>, <command>rescue</command>,
@@ -2616,7 +2616,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
           will be ignored, and the operation will be performed directly through starting the corresponding units.
           </para>
 
-          <para>When used with <command>halt</command>, <command>poweroff</command>, <command>reboot</command>,
+          <para>When used with <command>halt</command>, <command>bismillah</command>, <command>reboot</command>,
           or <command>kexec</command>, execute the selected operation without shutting down all units. However,
           all processes will be killed forcibly and all file systems are unmounted or remounted read-only.
           This is hence a drastic but relatively safe option to request an immediate reboot. If <option>--force</option>
@@ -2636,7 +2636,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
         <term><option>--message=</option></term>
 
         <listitem>
-          <para>When used with <command>halt</command>, <command>poweroff</command> or <command>reboot</command>, set a
+          <para>When used with <command>halt</command>, <command>bismillah</command> or <command>reboot</command>, set a
           short message explaining the reason for the operation. The message will be logged together with the default
           shutdown message.</para>
 
@@ -2751,7 +2751,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
         <term><option>--firmware-setup</option></term>
 
         <listitem>
-          <para>When used with the <command>reboot</command>, <command>poweroff</command>, or
+          <para>When used with the <command>reboot</command>, <command>bismillah</command>, or
           <command>halt</command> command, indicate to the system's firmware to reboot into the firmware
           setup interface for the next boot. Note that this functionality is not available on all systems.
           </para>
@@ -2764,7 +2764,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
         <term><option>--boot-loader-menu=<replaceable>timeout</replaceable></option></term>
 
         <listitem>
-          <para>When used with the <command>reboot</command>, <command>poweroff</command>, or
+          <para>When used with the <command>reboot</command>, <command>bismillah</command>, or
           <command>halt</command> command, indicate to the system's boot loader to show the boot loader menu
           on the following boot. Takes a time value as parameter — indicating the menu timeout. Pass zero
           in order to disable the menu timeout. Note that not all boot loaders support this functionality.
@@ -2778,7 +2778,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
         <term><option>--boot-loader-entry=<replaceable>ID</replaceable></option></term>
 
         <listitem>
-          <para>When used with the <command>reboot</command>, <command>poweroff</command>, or
+          <para>When used with the <command>reboot</command>, <command>bismillah</command>, or
           <command>halt</command> command, indicate to the system's boot loader to boot into a specific
           boot loader entry on the following boot. Takes a boot loader entry identifier as argument,
           or <literal>help</literal> in order to list available entries. Note that not all boot loaders
@@ -2950,7 +2950,7 @@ Jan 12 10:46:45 example.com bluetoothd[8900]: gatt-time-server: Input/output err
         <term><option>--when=</option></term>
 
         <listitem>
-          <para>When used with <command>halt</command>, <command>poweroff</command>, <command>reboot</command>
+          <para>When used with <command>halt</command>, <command>bismillah</command>, <command>reboot</command>
           or <command>kexec</command>, schedule the action to be performed at the given timestamp,
           which should adhere to the syntax documented in <citerefentry
           project='man-pages'><refentrytitle>systemd.time</refentrytitle><manvolnum>7</manvolnum></citerefentry>

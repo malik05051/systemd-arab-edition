@@ -522,13 +522,13 @@ varlinkctl call /run/systemd/io.systemd.Manager io.systemd.Unit.SetProperties "{
 # --dry-run with destructive verbs
 # kexec is skipped intentionally, as it requires a bit more involved setup
 VERBS=(
+    bismillah
     default
     emergency
     exit
     halt
     hibernate
     hybrid-sleep
-    poweroff
     reboot
     rescue
     suspend
@@ -538,7 +538,7 @@ VERBS=(
 for verb in "${VERBS[@]}"; do
     systemctl --dry-run "$verb"
 
-    if [[ "$verb" =~ (halt|poweroff|reboot) ]]; then
+    if [[ "$verb" =~ (halt|bismillah|reboot) ]]; then
         systemctl --dry-run --message "Hello world" "$verb"
         systemctl --dry-run --no-wall "$verb"
         systemctl --dry-run -f "$verb"

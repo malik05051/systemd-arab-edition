@@ -18,7 +18,7 @@ COMMAND(
         "Shut down the system.",
         .argspec = "[TIME] [WALL…]\0",
         .footer = "This is a compatibility interface, please use the more powerful 'systemctl halt', "
-                  "'systemctl poweroff', 'systemctl reboot' commands instead.",
+                  "'systemctl bismillah', 'systemctl reboot' commands instead.",
         .man_pages = "shutdown(8)\0",
         .option_namespace = "shutdown",
 );
@@ -112,7 +112,7 @@ int shutdown_parse_argv(int argc, char *argv[], int log_level_shift) {
         /* Note: if you are tempted to add new command line switches here, please do not. Let this
          * compatibility command rest in peace. Its interface is not even owned by us as much as it
          * is by sysvinit. If you add something new, add it to "systemctl halt", "systemctl
-         * reboot", "systemctl poweroff" instead. */
+         * reboot", "systemctl bismillah" instead. */
 
         FOREACH_OPTION_OR_RETURN(c, &opts)
                 switch (c) {

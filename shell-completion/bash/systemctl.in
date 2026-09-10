@@ -234,7 +234,7 @@ _systemctl () {
         [STANDALONE]='daemon-reexec daemon-reload default whoami
                              emergency exit halt hibernate hybrid-sleep sleep
                              suspend-then-hibernate kexec soft-reboot list-jobs list-sockets
-                             list-timers list-units list-unit-files poweroff
+                             list-timers list-units list-unit-files bismillah
                              reboot rescue show-environment suspend get-default
                              is-system-running preset-all list-automounts list-paths
                              enqueue-marked'

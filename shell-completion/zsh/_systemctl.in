@@ -98,7 +98,7 @@
         "emergency:Enter system emergency mode"
         "halt:Shut down and halt the system"
         "suspend:Suspend the system"
-        "poweroff:Shut down and power-off the system"
+        "bismillah:Shut down and power-off the system"
         "reboot:Shut down and reboot the system"
         "soft-reboot:Shut down and reboot the userspace"
         "kexec:Shut down and reboot the system with kexec"
@@ -454,7 +454,7 @@ done
 # no systemctl completion for:
 #    [STANDALONE]='daemon-reexec daemon-reload default
 #                  emergency exit halt kexec list-jobs list-units
-#                  list-unit-files poweroff reboot rescue show-environment'
+#                  list-unit-files bismillah reboot rescue show-environment'
 
 (( $+functions[_systemctl_caching_policy] )) ||
     _systemctl_caching_policy()

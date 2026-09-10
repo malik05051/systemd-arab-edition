@@ -352,7 +352,9 @@ int logind_schedule_shutdown(enum action a) {
         if (r < 0)
                 return r;
 
-        action = action_table[a].verb;
+        /* logind's ScheduleShutdown() knows the power-off action under its traditional name, regardless of
+         * what we call the verb on the command line. */
+        action = a == ACTION_POWEROFF ? "poweroff" : action_table[a].verb;
         if (!action)
                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Scheduling not supported for this action.");
 
@@ -431,11 +433,14 @@ int logind_show_shutdown(void) {
         else /* If we don't recognize the action string, we'll show it as-is */
                 pretty_action = action;
 
+        /* Translate logind's action name back into the verb the user is supposed to type. */
+        const char *cancel_verb = streq(action, "poweroff") ? "bismillah" : action;
+
         if (IN_SET(arg_action, ACTION_SYSTEMCTL, ACTION_SYSTEMCTL_SHOW_SHUTDOWN))
                 log_info("%s scheduled for %s, use 'systemctl %s --when=cancel' to cancel.",
                          pretty_action,
                          FORMAT_TIMESTAMP_STYLE(elapse, arg_timestamp_style),
-                         action);
+                         cancel_verb);
         else
                 log_info("%s scheduled for %s, use 'shutdown -c' to cancel.",
                          pretty_action,

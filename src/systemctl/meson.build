@@ -63,7 +63,7 @@ executables += [
         },
 ]
 
-foreach alias : ['halt', 'poweroff', 'reboot', 'shutdown']
+foreach alias : ['halt', 'bismillah', 'reboot', 'shutdown']
         install_symlink(alias,
                         pointing_to : sbin_to_bin + 'systemctl',
                         install_dir : sbindir)
