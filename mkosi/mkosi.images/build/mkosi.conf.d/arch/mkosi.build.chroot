@@ -61,6 +61,14 @@ if ! grep "bismillah" /tmp/PKGBUILD >/dev/null; then
     exit 1
 fi
 
+# Packages published in a repository of our own are renamed so that they are not mistaken for the
+# distribution's and are not quietly replaced by its next systemd upgrade. Images keep the original
+# names, because that is what mkosi installs into them by name, hence the opt-in.
+if ((${RENAME_PACKAGES:-0})); then
+    python3 mkosi/mkosi.images/build/mkosi.conf.d/arch/rename-packages.py /tmp/PKGBUILD /tmp/PKGBUILD.renamed
+    mv /tmp/PKGBUILD.renamed /tmp/PKGBUILD
+fi
+
 mount --bind /tmp/PKGBUILD "pkg/$PKG_SUBDIR/PKGBUILD"
 
 (
