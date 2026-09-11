@@ -72,6 +72,16 @@ def main() -> None:
 
     names = read_pkgnames(pkgbuild)
 
+    # GitHub rewrites the characters it does not like in the name of a release asset, a tilde among
+    # them, so a package built as 262~rc2 is published as 262.rc2 while the database still asks for
+    # the name it was built under. Spell the version so that it survives being published.
+    pkgbuild = re.sub(
+        r"^pkgver=(.*)$",
+        lambda m: "pkgver=" + m.group(1).replace("~", "."),
+        pkgbuild,
+        flags=re.MULTILINE,
+    )
+
     # pkgbase is deliberately left alone. It is not a package pacman installs, and the packaging uses
     # it as the name of the directory the sources are expected in, which is prepared for us under the
     # name the packaging repository knows.
