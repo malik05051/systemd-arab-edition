@@ -63,7 +63,12 @@ fi
 
 # Packages published in a repository of our own are renamed so that they are not mistaken for the
 # distribution's and are not quietly replaced by its next systemd upgrade. Images keep the original
-# names, because that is what mkosi installs into them by name, hence the opt-in.
+# names, because that is what mkosi installs into them by name, hence the opt-in:
+#
+#     mkosi -d arch -E RENAME_PACKAGES=1 -t none -f
+#
+# Note the -E: scripts only see variables mkosi was told about, not whatever happens to be in the
+# environment it was started from.
 if ((${RENAME_PACKAGES:-0})); then
     python3 mkosi/mkosi.images/build/mkosi.conf.d/arch/rename-packages.py /tmp/PKGBUILD /tmp/PKGBUILD.renamed
     mv /tmp/PKGBUILD.renamed /tmp/PKGBUILD
