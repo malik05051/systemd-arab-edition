@@ -72,7 +72,9 @@ def main() -> None:
 
     names = read_pkgnames(pkgbuild)
 
-    pkgbuild = re.sub(r"^pkgbase=(\S+)", rf"pkgbase=\g<1>{SUFFIX}", pkgbuild, flags=re.MULTILINE)
+    # pkgbase is deliberately left alone. It is not a package pacman installs, and the packaging uses
+    # it as the name of the directory the sources are expected in, which is prepared for us under the
+    # name the packaging repository knows.
     pkgbuild = rename_in_array(pkgbuild, "pkgname", names)
 
     # The packages depend on and recommend each other by name, so those references move too.
