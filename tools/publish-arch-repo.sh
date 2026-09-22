@@ -15,7 +15,7 @@ set -o pipefail
 SRCDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 REPO_NAME="${REPO_NAME:-malik05}"                       # pacman.conf section name, hence <name>.db
-REPO_DIR="${REPO_DIR:-/srv/arabrepo}"
+REPO_DIR="${REPO_DIR:-/srv/malik05}"
 GITHUB_REPO="${GITHUB_REPO:-malik05051/malik05-repo}"
 RELEASE_TAG="${RELEASE_TAG:-repo}"
 BUILD_DIR="${BUILD_DIR:-$SRCDIR/build/mkosi.builddir}"
