@@ -9,4 +9,5 @@
 `[malik05]
 SigLevel = Required
 Server = https://github.com/malik05051/malik05-repo/releases/download/repo`
+
 Then `sudo pacman -Sy systemd-arab-edition`
