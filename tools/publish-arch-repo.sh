@@ -20,9 +20,9 @@ GITHUB_REPO="${GITHUB_REPO:-malik05051/malik05-repo}"
 RELEASE_TAG="${RELEASE_TAG:-repo}"
 BUILD_DIR="${BUILD_DIR:-$SRCDIR/build/mkosi.builddir}"
 
-# Signing needs our own gpg keyring and agent, which root does not have: under sudo the key is
-# simply "not in your keyring". The repository directory therefore has to be ours, so that none of
-# this needs privileges at all.
+# Signing needs the invoking user's gpg keyring and agent, which root does not have: under sudo the
+# key is simply "not in your keyring". The repository directory therefore has to belong to that
+# user, so that none of this needs privileges at all.
 if [[ "$(id -u)" -eq 0 ]]; then
     echo "Run this as yourself, not as root: signing needs your gpg keyring." >&2
     echo "If $REPO_DIR is owned by root, hand it over once with" >&2
