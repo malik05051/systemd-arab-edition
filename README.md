@@ -6,8 +6,23 @@
 ### This fork also removes SystemD's birthDate functionality.
 
 ## Add the repo in /etc/pacman.conf
-`[malik05]
-SigLevel = Required
-Server = https://github.com/malik05051/malik05-repo/releases/download/repo`
 
-Then `sudo pacman -Sy systemd-arab-edition`
+```ini
+[malik05]
+SigLevel = DatabaseRequired PackageOptional TrustedOnly
+Server = https://github.com/malik05051/malik05-repo/releases/latest/download
+```
+
+The database is signed, so import the key once:
+
+```sh
+sudo pacman-key --add key.asc
+sudo pacman-key --lsign-key 9EB820E32291639E0E8A8516B6B763F6A4C101F8
+```
+
+Then:
+
+```sh
+sudo pacman -Syu systemd-arab-edition systemd-libs-arab-edition \
+                 systemd-sysvcompat-arab-edition systemd-resolvconf-arab-edition
+```
