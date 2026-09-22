@@ -16,6 +16,7 @@ Server = https://github.com/malik05051/malik05-repo/releases/latest/download
 The database is signed, so import the key once:
 
 ```sh
+curl -LO https://github.com/malik05051/malik05-repo/releases/latest/download/key.asc
 sudo pacman-key --add key.asc
 sudo pacman-key --lsign-key 9EB820E32291639E0E8A8516B6B763F6A4C101F8
 ```

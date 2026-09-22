@@ -55,7 +55,7 @@ done
 mkdir -p "$REPO_DIR"
 # Start from an empty directory: packages left over from an earlier version would otherwise stay in
 # the database next to the ones we just built.
-rm -f "$REPO_DIR"/*.pkg.tar "$REPO_DIR"/*.pkg.tar.zst "$REPO_DIR"/*.sig \
+rm -f "$REPO_DIR"/*.pkg.tar "$REPO_DIR"/*.pkg.tar.zst "$REPO_DIR"/*.sig "$REPO_DIR"/key.asc \
       "$REPO_DIR/$REPO_NAME".db* "$REPO_DIR/$REPO_NAME".files*
 cp -t "$REPO_DIR" "${packages[@]}"
 
@@ -72,6 +72,29 @@ shopt -u nullglob
 # --sign takes the key from GPGKEY in makepkg.conf, or pass --key here.
 repo-add --sign "$REPO_NAME.db.tar.zst" ./*.pkg.tar.zst
 
+# A signed database is of no use to anyone who cannot check the signature, so publish the public key
+# beside it. The key is configured for makepkg, which reads these files in this order, so read them
+# the same way rather than asking for it a second time. They are other people's configuration, so
+# neither their unset variables nor their exit statuses are ours to trip over.
+if [[ -z "${GPGKEY:-}" ]]; then
+    set +eu
+    for conf in /etc/makepkg.conf \
+                "${XDG_CONFIG_HOME:-$HOME/.config}/pacman/makepkg.conf" \
+                "$HOME/.makepkg.conf"; do
+        # shellcheck source=/dev/null
+        [[ -r "$conf" ]] && source "$conf"
+    done
+    set -eu
+fi
+
+if [[ -z "${GPGKEY:-}" ]]; then
+    echo "The database is signed but GPGKEY is set neither in the environment nor in makepkg.conf," >&2
+    echo "so the public key cannot be published and nobody else can check that signature." >&2
+    exit 1
+fi
+
+gpg --export --armor "$GPGKEY" > key.asc
+
 # pacman asks for <name>.db and <name>.files, which repo-add leaves as symlinks to the archives it
 # wrote. A symlink cannot be a release asset, so publish copies instead. The signatures cover the
 # bytes, so they are valid for the copies too.
@@ -82,7 +105,7 @@ done
 
 # The signatures are the step most easily forgotten, and their absence only shows up as a 404 on the
 # machine trying to sync, so refuse to publish without them.
-for required in "$REPO_NAME".db "$REPO_NAME".db.sig "$REPO_NAME".files "$REPO_NAME".files.sig; do
+for required in "$REPO_NAME".db "$REPO_NAME".db.sig "$REPO_NAME".files "$REPO_NAME".files.sig key.asc; do
     [[ -s "$required" ]] || { echo "$required is missing or empty, not publishing." >&2; exit 1; }
 done
 
@@ -97,7 +120,7 @@ gh release delete "$RELEASE_TAG" --repo "$GITHUB_REPO" --yes --cleanup-tag 2>/de
 gh release create "$RELEASE_TAG" --repo "$GITHUB_REPO" \
    --title "systemd-arab-edition v$version" \
    --notes "Packages built from systemd $version." \
-   "${published[@]}" "$REPO_NAME".db* "$REPO_NAME".files*
+   "${published[@]}" "$REPO_NAME".db* "$REPO_NAME".files* key.asc
 
 cat <<EOF
 
@@ -109,9 +132,9 @@ Published. On a machine that does not have the repository yet:
 
 above [core] in /etc/pacman.conf, with the key imported:
 
-    gpg --export --armor \$GPGKEY > key.asc
+    curl -LO https://github.com/$GITHUB_REPO/releases/latest/download/key.asc
     sudo pacman-key --add key.asc
-    sudo pacman-key --lsign-key \$GPGKEY
+    sudo pacman-key --lsign-key $GPGKEY
 
 then:
 
