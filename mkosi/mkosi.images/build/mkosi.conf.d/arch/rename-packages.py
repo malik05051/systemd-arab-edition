@@ -3,8 +3,8 @@
 
 """Rewrite Arch's systemd PKGBUILD so it builds this fork under its own package names.
 
-The packaging repository builds packages called systemd, systemd-libs and so on, which is what we
-want for the images mkosi builds, but not for packages published in a repository of our own: there
+The packaging repository builds packages called systemd, systemd-libs and so on, which is what the
+images mkosi builds need, but not what suits packages published in a separate repository: there
 they would be indistinguishable from the distribution's and any later systemd upgrade would quietly
 replace them. So every package is renamed with a suffix and declares that it provides and conflicts
 with the name it was built from, which is what lets pacman swap one for the other.
@@ -32,7 +32,7 @@ def read_pkgnames(pkgbuild: str) -> list[str]:
 
 
 def rename_in_array(pkgbuild: str, keyword: str, names: list[str]) -> str:
-    """Rename our own packages where they are listed in a keyword=(…) array."""
+    """Rename the packages being built where they are listed in a keyword=(…) array."""
 
     def sub(match: re.Match) -> str:
         body = match.group(2)
@@ -83,13 +83,13 @@ def main() -> None:
     )
 
     # pkgbase is deliberately left alone. It is not a package pacman installs, and the packaging uses
-    # it as the name of the directory the sources are expected in, which is prepared for us under the
+    # it as the name of the directory the sources are expected in, which is prepared under the
     # name the packaging repository knows.
     pkgbuild = rename_in_array(pkgbuild, "pkgname", names)
 
     # The packages depend on and recommend each other by name, so those references move too.
     # makedepends is deliberately left alone: it names what has to be installed to run the build,
-    # which is still the distribution's own systemd, not ours.
+    # which is still the distribution's own systemd, not the renamed one.
     for keyword in ("depends", "optdepends"):
         pkgbuild = rename_in_array(pkgbuild, keyword, names)
 

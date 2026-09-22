@@ -61,7 +61,7 @@ if ! grep "bismillah" /tmp/PKGBUILD >/dev/null; then
     exit 1
 fi
 
-# Packages published in a repository of our own are renamed so that they are not mistaken for the
+# Packages published in a separate repository are renamed so that they are not mistaken for the
 # distribution's and are not quietly replaced by its next systemd upgrade. Images keep the original
 # names, because that is what mkosi installs into them by name, hence the opt-in:
 #
