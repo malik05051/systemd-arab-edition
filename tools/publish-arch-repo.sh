@@ -107,7 +107,7 @@ Published. On a machine that does not have the repository yet:
     SigLevel = DatabaseRequired PackageOptional TrustedOnly
     Server = https://github.com/$GITHUB_REPO/releases/latest/download
 
-above [core] in /etc/pacman.conf, with our key imported:
+above [core] in /etc/pacman.conf, with the key imported:
 
     gpg --export --armor \$GPGKEY > key.asc
     sudo pacman-key --add key.asc
