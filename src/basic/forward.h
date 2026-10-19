@@ -27,6 +27,7 @@ typedef uint64_t nsec_t;
 
 /* Libc/Linux forward declarations */
 
+struct __kernel_timespec;
 struct dirent;
 struct ether_addr;
 struct fiemap;
@@ -113,6 +114,7 @@ typedef enum UnitDependency UnitDependency;
 typedef enum UnitNameMangle UnitNameMangle;
 typedef enum UnitType UnitType;
 typedef enum WaitFlags WaitFlags;
+typedef enum XOpenFlags XOpenFlags;
 
 typedef struct Fiber Fiber;
 typedef struct FiberOps FiberOps;

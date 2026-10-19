@@ -48,6 +48,7 @@ shared_sources = files(
         'condition.c',
         'conf-parser.c',
         'copy.c',
+        'counters-file.c',
         'coredump-util.c',
         'cpu-set-util.c',
         'creds-util.c',
@@ -169,6 +170,7 @@ shared_sources = files(
         'pcre2-util.c',
         'pcrextend-util.c',
         'pe-binary.c',
+        'pe-writer.c',
         'pkcs7-util.c',
         'pkcs11-util.c',
         'plymouth-util.c',
@@ -212,14 +214,15 @@ shared_sources = files(
         'tomoyo-util.c',
         'tpm2-util.c',
         'tpm2-event-log.c',
-        'tsm-report.c',
         'udev-util.c',
         'unit-file.c',
+        'unit-result.c',
         'user-record-nss.c',
         'user-record-show.c',
         'user-record.c',
         'userdb-dropin.c',
         'userdb.c',
+        'validatefs-util.c',
         'varlink-idl-common.c',
         'varlink-io.systemd.AskPassword.c',
         'varlink-io.systemd.BootControl.c',
@@ -253,14 +256,17 @@ shared_sources = files(
         'varlink-io.systemd.Resolve.c',
         'varlink-io.systemd.Resolve.Hook.c',
         'varlink-io.systemd.Resolve.Monitor.c',
+        'varlink-io.systemd.ResourceProvider.c',
         'varlink-io.systemd.Shutdown.c',
         'varlink-io.systemd.StorageProvider.c',
         'varlink-io.systemd.SysInstall.c',
         'varlink-io.systemd.SysUpdate.c',
         'varlink-io.systemd.SysUpdate.Notify.c',
+        'varlink-io.systemd.SysUpdate.Provider.c',
         'varlink-io.systemd.Udev.c',
         'varlink-io.systemd.Unit.c',
         'varlink-io.systemd.UserDatabase.c',
+        'varlink-io.systemd.VarlinkMonitor.c',
         'varlink-io.systemd.VirtualMachineInstance.c',
         'varlink-io.systemd.oom.c',
         'varlink-io.systemd.oom.Prekill.c',
@@ -276,7 +282,6 @@ shared_sources = files(
         'vsock-util.c',
         'wall.c',
         'watchdog.c',
-        'web-util.c',
         'wifi-util.c',
         'xml.c',
 )
@@ -307,8 +312,12 @@ if conf.get('HAVE_LIBBPF') == 1
         shared_sources += files('bpf-link.c')
 endif
 
-if conf.get('HAVE_TPM2') == 1
-        shared_sources += files('tpm2-report.c')
+if conf.get('ENABLE_REPORT') == 1
+        shared_sources += files('tsm-report.c')
+
+        if conf.get('HAVE_TPM2') == 1
+                shared_sources += files('tpm2-report.c')
+        endif
 endif
 
 generate_ip_protocol_list = files('generate-ip-protocol-list.sh')
@@ -327,7 +336,7 @@ gperf_file = custom_target(
 target1 = custom_target(
         input : gperf_file,
         output : 'ip-protocol-from-name.inc',
-        command : [gperf,
+        command : [gperf_cmdline,
                    '-L', 'ANSI-C', '-t', '--ignore-case',
                    '-N', 'lookup_ip_protocol',
                    '-H', 'hash_ip_protocol_name',
@@ -381,7 +390,7 @@ gperf_file = custom_target(
 dns_type_from_name_inc = custom_target(
         input : gperf_file,
         output : 'dns_type-from-name.inc',
-        command : [gperf,
+        command : [gperf_cmdline,
                    '-L', 'ANSI-C', '-t', '--ignore-case',
                    '-N', 'lookup_dns_type',
                    '-H', 'hash_dns_type_name',

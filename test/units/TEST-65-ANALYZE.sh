@@ -1040,7 +1040,7 @@ fi
 systemd-analyze --threshold=90 security systemd-journald.service
 
 # issue 23663
-check() {(
+check() (
     set +x
     output=$(systemd-analyze security --offline="${2?}" "${3?}" | grep -F 'SystemCallFilter=')
     assert_in "System call ${1?} list" "$output"
@@ -1055,7 +1055,7 @@ check() {(
     assert_in "[+✓] SystemCallFilter=~@debug" "$output"
     assert_in "[+✓] SystemCallFilter=~@cpu-emulation" "$output"
     assert_in "[-✗] SystemCallFilter=~@clock" "$output"
-)}
+)
 
 export -n SYSTEMD_LOG_LEVEL
 
@@ -1124,6 +1124,16 @@ systemd-analyze architectures x86
 systemd-analyze architectures x86-64
 systemd-analyze architectures native
 systemd-analyze architectures uname
+
+if systemd-analyze --no-legend architectures native | grep -E '^(x86|x86-64|arm64|arm64-be)[[:space:]]' >/dev/null; then
+    rc=0
+else
+    rc=1
+fi
+assert_rc "$rc" systemd-analyze cpu-features
+assert_rc "$rc" systemd-analyze cpu-features --json=pretty
+assert_rc "$rc" systemd-analyze cpu-features foo hoge fpu fp
+assert_rc "$rc" systemd-analyze cpu-features --json=pretty foo hoge fpu fp avx
 
 systemd-analyze smbios11
 systemd-analyze smbios11 -q

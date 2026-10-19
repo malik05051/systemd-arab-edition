@@ -111,7 +111,6 @@ int tar_pull_new(
                 TarPullFinished on_finished,
                 void *userdata) {
 
-        _cleanup_(curl_glue_unrefp) CurlGlue *g = NULL;
         _cleanup_(sd_event_unrefp) sd_event *e = NULL;
         _cleanup_(tar_pull_unrefp) TarPull *p = NULL;
         _cleanup_free_ char *root = NULL;
@@ -132,10 +131,6 @@ int tar_pull_new(
                         return r;
         }
 
-        r = curl_glue_new(&g, e);
-        if (r < 0)
-                return r;
-
         p = new(TarPull, 1);
         if (!p)
                 return -ENOMEM;
@@ -145,7 +140,6 @@ int tar_pull_new(
                 .userdata = userdata,
                 .image_root = TAKE_PTR(root),
                 .event = TAKE_PTR(e),
-                .glue = TAKE_PTR(g),
                 .tar_pid = PIDREF_NULL,
                 .tree_fd = -EBADF,
                 .userns_fd = -EBADF,
@@ -310,14 +304,9 @@ static int tar_pull_make_local_copy(TarPull *p) {
                         }
 
                         _cleanup_close_ int directory_fd = -EBADF;
-                        r = mountfsd_make_directory(
-                                        mountfsd_link,
-                                        t,
-                                        MODE_INVALID,
-                                        /* flags= */ 0,
-                                        &directory_fd);
+                        r = mkdir_foreign(t, MODE_INVALID, &directory_fd);
                         if (r < 0)
-                                return log_error_errno(r, "Failed to make directory via mountfsd: %m");
+                                return log_error_errno(r, "Failed to make foreign UID range owned directory: %m");
 
                         _cleanup_close_ int copy_fd = -EBADF;
                         r = mountfsd_mount_directory_fd(
@@ -623,14 +612,9 @@ static int tar_pull_job_on_open_disk_tar(PullJob *j) {
                         return log_error_errno(r, "Failed to connect to mountfsd: %m");
 
                 _cleanup_close_ int directory_fd = -EBADF;
-                r = mountfsd_make_directory(
-                                mountfsd_link,
-                                where,
-                                MODE_INVALID,
-                                /* flags= */ 0,
-                                &directory_fd);
+                r = mkdir_foreign(where, MODE_INVALID, &directory_fd);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to make directory via mountfsd: %m");
+                        return log_error_errno(r, "Failed to make foreign UID range owned directory: %m");
 
                 r = mountfsd_mount_directory_fd(
                                 mountfsd_link,
@@ -723,7 +707,7 @@ int tar_pull_start(
         assert(!(flags & IMPORT_PULL_SETTINGS) || !(flags & IMPORT_DIRECT));
         assert(!(flags & IMPORT_PULL_SETTINGS) || !iovec_is_set(checksum));
 
-        if (!http_url_is_valid(url) && !file_url_is_valid(url))
+        if (!http_url_is_valid(url) && !file_url_is_valid(url) && !provider_url_is_valid(url))
                 return -EINVAL;
 
         if (local && !pull_validate_local(local, flags))
@@ -739,8 +723,16 @@ int tar_pull_start(
         p->flags = flags;
         p->verify = verify;
 
+        /* Everything but provider: URLs is transported via curl, hence set up the curl glue on first use. This
+         * also defers loading libcurl to this point, so that pulling from a resource provider works without it. */
+        if (!provider_url_is_valid(url) && !p->glue) {
+                r = curl_glue_new(&p->glue, p->event);
+                if (r < 0)
+                        return r;
+        }
+
         /* Set up download job for TAR file */
-        r = pull_job_new(&p->tar_job, url, p->glue, p);
+        r = pull_job_new(&p->tar_job, url, p->event, p->glue, p);
         if (r < 0)
                 return r;
 
@@ -767,6 +759,7 @@ int tar_pull_start(
                         &p->signature_job,
                         verify,
                         url,
+                        p->event,
                         p->glue,
                         tar_pull_job_on_finished,
                         p);
@@ -781,6 +774,7 @@ int tar_pull_start(
                                 tar_strip_suffixes,
                                 ".nspawn",
                                 verify,
+                                p->event,
                                 p->glue,
                                 tar_pull_job_on_open_disk_settings,
                                 tar_pull_job_on_finished,

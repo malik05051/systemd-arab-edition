@@ -1,5 +1,131 @@
 systemd System and Service Manager
 
+CHANGES WITH 263 in spe:
+
+        Announcements of Future Feature Removals and Incompatible Changes:
+
+        * inotify-backed device watch support will be removed in a future
+          release, making fanotify mandatory. This requires kernel ≥ v5.13
+          with CONFIG_FANOTIFY, CONFIG_TMPFS, and CONFIG_SHMEM. See also the
+          changes in systemd-udevd below.
+
+        Feature Removals and Incompatible Changes:
+
+        * ConfigurationDirectory= passed as a transient-unit property over
+          D-Bus now uses the same directory:symlink:flags parser as the other
+          *Directory= settings, allowing the read-only flag with an empty
+          symlink field. Literal colons need an additional level of escaping
+          in the client value. For example, use the shell-quoted argument
+          --property='ConfigurationDirectory=foo\\:bar' for a directory named
+          foo:bar. Unit file syntax and the signature of the plain D-Bus
+          string array property are unchanged.
+
+        * Empty transient assignments to RuntimeDirectory=, StateDirectory=,
+          CacheDirectory= and LogsDirectory= now reset the corresponding
+          directory list instead of being ignored. ConfigurationDirectory=
+          continues to support resetting the list with an empty assignment.
+
+        * Transient *Directory= drop-ins now escape colons and quotes in
+          paths set through either D-Bus signature, preserving the paths
+          when the unit is reloaded.
+
+        * The *DirectorySymlink D-Bus properties now reject source and
+          destination paths equal to or below private/, which is reserved for
+          DynamicUser= directories. Unit files reject these symlink destinations
+          too, matching the existing restriction on source paths.
+
+        * systemctl show now includes directory flags in *DirectorySymlink
+          values. Read-only entries are shown as source:destination:ro instead
+          of source:destination. Unknown flags are shown numerically so newer
+          manager properties can still be displayed.
+
+        * systemd-networkd and networkctl have been merged into a single
+          multi-call binary, with the former becoming a symlink to the latter.
+          This should generally be invisible to users, but some packaging and
+          MAC policy adjustments might be necessary. In particular, it is
+          expected that the SELinux policy needs to be updated.
+
+        * systemd-networkd now updates the hostname sent by the DHCPv4 and
+          DHCPv6 clients when the system hostname is changed. Previously, the
+          hostname known when the interface was configured was sent until the
+          interface was reconfigured. The DHCPv4 lease is renewed immediately
+          to send the new hostname, while for DHCPv6 the new hostname is sent
+          on the next renewal. Since some DHCP servers provide different
+          settings depending on the hostname sent by the client, the previous
+          behaviour may be restored with the new SendHostnameUpdates=no
+          setting in the [DHCPv4] and [DHCPv6] sections.
+
+        * The "appStream" key of
+          org.freedesktop.sysupdate1.Target.DescribeFeature() is now an array of
+          strings rather than a single optional string.
+
+        * systemd-sysext/systemd-confext now match IMAGE_ID= and
+          IMAGE_VERSION= fields from extension-release files against the host
+          os-release. If an extension declares IMAGE_ID= or IMAGE_VERSION=, the
+          host must declare the same field with a matching value, or the
+          extension is rejected. Previously these fields were ignored during
+          validation and could appear in extension-release files as harmless
+          descriptive metadata. Extensions that set IMAGE_ID= or IMAGE_VERSION=
+          without intending them as host constraints should remove these fields
+          or prefix them with SYSEXT_/CONFEXT_ to describe the extension
+          itself.
+
+        * The file system constraints encoded in the user.validatefs.*
+          extended attributes (as written by systemd-repart's AddValidateFS=
+          setting, which is enabled by default for most file systems) are now
+          also enforced when mounting partitions of disk images, i.e. via
+          systemd-dissect, systemd-nspawn, systemd-sysext, portabled,
+          systemd-mountfsd and RootImage=. Any constraint that is set must be
+          fulfilled: in particular this means that file systems carrying GPT
+          partition label or type constraints may no longer be used as bare
+          file system images without partition table (for example
+          partitions split out of a DDI via systemd-repart --split=yes), and
+          file systems declared for a specific mount point may no longer be
+          used as root file system. Set AddValidateFS=no when building such
+          images, or set $SYSTEMD_DISSECT_VALIDATEFS=0 when using them to
+          restore the previous behaviour.
+
+        Changes in systemd-udevd:
+
+        * systemd-udevd now uses fanotify rather than inotify to watch device
+          nodes (as enabled by the "watch" udev rule option, i.e.
+          OPTIONS+="watch"). This requires kernel ≥ v5.13, CONFIG_FANOTIFY,
+          CONFIG_TMPFS, and CONFIG_SHMEM (for tmpfs-backed devtmpfs); on older
+          kernels or with CONFIG_SHMEM=n (ramfs), device watch uses inotify.
+          Upgrading from an older, inotify-based systemd-udevd is seamless:
+          existing watches are migrated automatically. Downgrading back is not
+          supported: after a downgrade, device watches must be re-established by
+          running "udevadm trigger" for all devices that have a device node.
+
+        Changes in systemd-networkd:
+
+        * As mentioned above, systemd-networkd and networkctl have been merged
+          into a single multi-call binary to reduce the installation footprint.
+
+        * As mentioned above, the hostname sent by the DHCPv4 and DHCPv6
+          clients now follows the system hostname. The new
+          SendHostnameUpdates= setting in the [DHCPv4] and [DHCPv6] sections
+          may be used to disable this.
+
+        Changes in systemd-sysupdate:
+
+        * systemd-sysupdate's "update" command acquired a new --loop= switch.
+          If specified, the update logic is run repeatedly until no further
+          updates are installed, or the specified number of iterations is
+          reached. This is useful for updates that make further updates
+          available, for example because they ship new or changed transfer
+          files. systemd-sysupdate-update.service now uses --loop=16.
+
+        Changes in the TPM Subsystem:
+
+        * If the booted UKI carries no PCR public key or no signed PCR policy
+          with the "initrd" policy reference, NvPCRs are now initialized in the
+          initrd with a write policy bound to the current value of PCR 11,
+          instead of not being initialized at all. The names of such NvPCRs,
+          which are measured into PCR 9, change whenever the UKI changes, so
+          this is mostly useful where the value of PCR 11 in the initrd is
+          predictable.
+
 CHANGES WITH 262:
 
         Announcements of Future Feature Removals and Incompatible Changes:
@@ -681,7 +807,7 @@ CHANGES WITH 262:
           inspired by unit file's ConditionXYZ= settings, and allows marking
           components and features as suggested for installation under various
           conditions (such as architecture, used virtualization, host identity,
-          kernel command line, version, firmware properties and machine tag).
+          kernel command line, version, firmware properties and machine tags).
           All components currently suggested can be enabled via
           'systemd-sysupdate enable-component --component-suggested' (and
           similarly for features). Note that by providing hwdb files that match
@@ -1464,10 +1590,6 @@ CHANGES WITH 261:
           booting on UEFI firmware that supports TPMs, avoiding spurious
           errors on systems without a TPM.
 
-        * libcryptsetup is now loaded via dlopen() in the cryptsetup
-          binaries, eliminating the hard runtime dependency for systems that do
-          not actually use it.
-
         * systemd-cryptenroll now defaults to sealing the LUKS2 key using
           RSA-OAEP with SHA-256 (or SHA-1 if the hardware doesn't support it),
           in order to make the setup more robust against theoretical future
@@ -1476,7 +1598,7 @@ CHANGES WITH 261:
 
         Changes in Dynamic Linking:
 
-        * libgnutls, libmicrohttpd, libcurl, libcrypto, libssl, libfdisk
+        * libgnutls, libmicrohttpd, libcurl, libcrypto, libssl, libfdisk,
           and libcryptsetup are now consistently loaded via dlopen()
           throughout the codebase, further reducing the set of mandatory
           dependencies from all binaries.
@@ -2531,19 +2653,15 @@ CHANGES WITH 259:
           the PAM modules pam_systemd + pam_systemd_home + pam_systemd_loadkey,
           which are loaded by PAM and hence need PAM anyway to operate).
 
-        * Similarly, libacl support is now implemented via dlopen().
+        * Similarly, libmount is now loaded via dlopen().
 
-        * Similarly, libblkid support is now implemented via dlopen().
+          Note: libmount still must be installed for systemd to manage the
+          system. However, libsystemd.so no longer requires it, and neither do
+          various ways to invoke the systemd service manager binary other than
+          to manage the system.
 
-        * Similarly, libseccomp support is now implemented via dlopen().
-
-        * Similarly, libselinux support is now implemented via dlopen().
-
-        * Similarly, libmount support is now implemented via dlopen(). Note,
-          that libmount still must be installed in order to invoke the service
-          manager itself. However, libsystemd.so no longer requires it, and
-          neither do various ways to invoke the systemd service manager binary
-          short of using it to manage a system.
+        * Similarly, libacl, libblkid, libseccomp, libselinux are loaded via
+          dlopen().
 
         * systemd no longer links against libcap at all. The simple system call
           wrappers and other APIs it provides have been reimplemented directly
