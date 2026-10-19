@@ -348,7 +348,7 @@ static int oci_pull_redirect_manifest(OciPull *i, const OciIndexEntry *entry) {
                 return r;
 
         _cleanup_(pull_job_unrefp) PullJob *j = NULL;
-        r = pull_job_new(&j, url, i->glue, i);
+        r = pull_job_new(&j, url, i->event, i->glue, i);
         if (r < 0)
                 return r;
 
@@ -474,14 +474,9 @@ static int oci_pull_job_on_open_disk(PullJob *j) {
                         return log_error_errno(r, "Failed to connect to mountfsd: %m");
 
                 _cleanup_close_ int directory_fd = -EBADF;
-                r = mountfsd_make_directory(
-                                mountfsd_link,
-                                st->temp_path,
-                                MODE_INVALID,
-                                /* flags= */ 0,
-                                &directory_fd);
+                r = mkdir_foreign(st->temp_path, MODE_INVALID, &directory_fd);
                 if (r < 0)
-                        return log_error_errno(r, "Failed to make directory via mountfsd: %m");
+                        return log_error_errno(r, "Failed to make foreign UID range owned directory: %m");
 
                 r = mountfsd_mount_directory_fd(
                                 mountfsd_link,
@@ -591,7 +586,7 @@ static int oci_pull_queue_layer(OciPull *i, OciManifestLayer *layer) {
 
         /* Set up  */
         _cleanup_(pull_job_unrefp) PullJob *j = NULL;
-        r = pull_job_new(&j, url, i->glue, st);
+        r = pull_job_new(&j, url, i->event, i->glue, st);
         if (r < 0)
                 return r;
 
@@ -684,7 +679,7 @@ static int oci_pull_fetch_config(OciPull *i, OciManifestConfig *config) {
         if (!h)
                 return log_oom();
 
-        r = pull_job_new(&i->config_job, url, i->glue, i);
+        r = pull_job_new(&i->config_job, url, i->event, i->glue, i);
         if (r < 0)
                 return r;
 
@@ -1162,15 +1157,9 @@ static int oci_pull_save_mstack(OciPull *i) {
                         if (r < 0)
                                 return r;
 
-                        r = mountfsd_make_directory_fd(
-                                        /* vl= */ NULL,
-                                        dir_fd,
-                                        "rw",
-                                        0755,
-                                        /* flags= */ 0,
-                                        /* ret_directory_fd= */ NULL);
+                        r = mkdir_foreign_at(dir_fd, "rw", 0755, /* ret_directory_fd= */ NULL);
                         if (r < 0)
-                                return r;
+                                return log_error_errno(r, "Failed to create 'rw' layer: %m");
                 } else {
                         _cleanup_close_ int rw_fd = open_mkdir_at(dir_fd, "rw", O_EXCL|O_CLOEXEC, 0755);
                         if (rw_fd < 0)
@@ -1477,7 +1466,7 @@ static int oci_pull_process_authentication_challenge(OciPull *i, const char *cha
         if (r < 0)
                 return log_error_errno(r, "Failed to make bearer token URL: %m");
 
-        r = pull_job_new(&i->bearer_token_job, url, i->glue, i);
+        r = pull_job_new(&i->bearer_token_job, url, i->event, i->glue, i);
         if (r < 0)
                 return r;
 
@@ -1588,7 +1577,7 @@ int oci_pull_start(
                 return r;
 
         /* Set up  */
-        r = pull_job_new(&i->manifest_job, url, i->glue, i);
+        r = pull_job_new(&i->manifest_job, url, i->event, i->glue, i);
         if (r < 0)
                 return r;
 

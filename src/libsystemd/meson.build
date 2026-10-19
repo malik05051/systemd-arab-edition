@@ -71,8 +71,10 @@ sd_device_sources = files(
 ############################################################
 
 sd_future_sources = files(
+        'sd-future/channel.c',
         'sd-future/fiber-io.c',
         'sd-future/fiber.c',
+        'sd-future/future-group.c',
         'sd-future/sd-future.c',
 )
 
@@ -186,13 +188,14 @@ simple_tests += files(
         'sd-device/test-device-util.c',
         'sd-device/test-sd-device-monitor.c',
         'sd-event/test-event-future.c',
+        'sd-future/test-channel.c',
         'sd-future/test-fiber.c',
         'sd-future/test-fiber-io.c',
         'sd-future/test-fiber-ops.c',
+        'sd-future/test-future-group.c',
         'sd-hwdb/test-sd-hwdb.c',
         'sd-id128/test-id128.c',
         'sd-journal/test-catalog.c',
-        'sd-journal/test-journal-file.c',
         'sd-journal/test-journal-flush.c',
         'sd-journal/test-journal-init.c',
         'sd-journal/test-journal-interleaving.c',
@@ -265,7 +268,15 @@ libsystemd_tests += [
                 'timeout' : 360,
         },
         {
+                'sources' : files('sd-journal/test-journal-file.c'),
+                'export' : files('sd-journal/journal-test-util.c'),
+        },
+        {
                 'sources' : files('sd-journal/test-journal-append.c'),
+                'type' : 'manual',
+        },
+        {
+                'sources' : files('sd-journal/test-journal-benchmark.c'),
                 'type' : 'manual',
         },
         {
@@ -302,4 +313,5 @@ simple_fuzzers += files(
         'sd-bus/fuzz-bus-match.c',
         'sd-bus/fuzz-bus-message.c',
         'sd-hwdb/fuzz-hwdb.c',
+        'sd-journal/fuzz-journal-file.c',
 )

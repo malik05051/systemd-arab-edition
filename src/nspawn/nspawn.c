@@ -1059,16 +1059,13 @@ static int parse_argv(int argc, char *argv[]) {
 
                 OPTION_LONG("system-call-filter", "LIST|~LIST",
                             "Permit/prohibit specific system calls"): {
-                        bool negative;
-                        const char *items;
-
-                        negative = opts.arg[0] == '~';
-                        items = negative ? opts.arg + 1 : opts.arg;
+                        bool negative = opts.arg[0] == '~';
+                        const char *items = negative ? opts.arg + 1 : opts.arg;
 
                         for (;;) {
                                 _cleanup_free_ char *word = NULL;
 
-                                r = extract_first_word(&items, &word, NULL, 0);
+                                r = extract_first_word(&items, &word, /* separators= */ WHITESPACE ",", 0);
                                 if (r == 0)
                                         break;
                                 if (r == -ENOMEM)
@@ -2912,8 +2909,8 @@ static int on_orderly_shutdown(sd_event_source *s, const struct signalfd_siginfo
 
         if (pidref_is_set(pid))
                 if (pidref_kill(pid, arg_kill_signal) >= 0) {
-                        log_info("Trying to halt container by sending %s to container PID 1. Send SIGTERM again to trigger immediate termination.",
-                                 signal_to_string(si->ssi_signo));
+                        log_info("Trying to halt container by sending SIG%s to container PID 1. Send SIG%s again to trigger immediate termination.",
+                                 signal_to_string(arg_kill_signal), signal_to_string(si->ssi_signo));
                         sd_event_source_set_userdata(s, NULL);
                         sd_notify(/* unset_environment= */ false, NOTIFY_STOPPING_MESSAGE);
                         return 0;
@@ -3877,6 +3874,7 @@ static DissectImageFlags determine_dissect_image_flags(void) {
                 (arg_read_only ? DISSECT_IMAGE_READ_ONLY : DISSECT_IMAGE_FSCK|DISSECT_IMAGE_GROWFS) |
                 DISSECT_IMAGE_ALLOW_USERSPACE_VERITY |
                 DISSECT_IMAGE_VERITY_SHARE |
+                DISSECT_IMAGE_TPM2_UNLOCK |
                 (arg_console_mode == CONSOLE_INTERACTIVE && arg_ask_password ? DISSECT_IMAGE_ALLOW_INTERACTIVE_AUTH : 0) |
                 ((arg_userns_ownership == USER_NAMESPACE_OWNERSHIP_FOREIGN) ? DISSECT_IMAGE_FOREIGN_UID :
                  (arg_userns_ownership != USER_NAMESPACE_OWNERSHIP_AUTO) ? DISSECT_IMAGE_IDENTITY_UID : 0);
@@ -6114,6 +6112,7 @@ static int run(int argc, char *argv[]) {
         LIBMOUNT_NOTE(recommended);
         LIBSECCOMP_NOTE(recommended);
         LIBSELINUX_NOTE(recommended);
+        TPM2_NOTE(suggested);
         (void) dlopen_cryptsetup(LOG_DEBUG);
         (void) dlopen_libacl(LOG_DEBUG);
         (void) dlopen_libblkid(LOG_DEBUG);
@@ -6473,7 +6472,7 @@ static int run(int argc, char *argv[]) {
                                         &arg_verity_settings,
                                         arg_image, NULL, NULL);
                         if (r < 0) {
-                                log_error_errno(r, "Failed to read verity artefacts for %s: %m", arg_image);
+                                log_error_errno(r, "Failed to read verity artifacts for %s: %m", arg_image);
                                 goto finish;
                         }
 

@@ -14,6 +14,23 @@ permissions:
   contents: read
 
 jobs:
+  readme-notice:
+    name: Check for README notice
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Repo checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Check that README.md has no review notice
+        run: |
+          if grep -F "Remove this line to confirm you've reviewed this PR before submitting." README.md >/dev/null; then
+              echo "::error file=README.md,line=1::Remove the review notice from README.md before merging."
+              exit 1
+          fi
+
   build:
     name: Lint Code Base
     runs-on: ubuntu-24.04
@@ -40,7 +57,7 @@ jobs:
           GITHUB_ACTIONS_CONFIG_FILE: actionlint.yml
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
 
-      - uses: systemd/mkosi@f7762b71437227922a367bb89597843c77494ef9
+      - uses: systemd/mkosi@131adaca5eb5f1551bc564ae4497ff940890a374
 
       - name: Check that tabs are not used in Python code
         run: sh -c '! git grep -P "\\t" -- src/core/generate-bpf-delegate-configs.py src/boot/generate-hwids-section.py src/ukify/ukify.py test/integration-tests/integration-test-wrapper.py'

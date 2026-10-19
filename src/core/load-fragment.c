@@ -3348,7 +3348,7 @@ int config_parse_syscall_filter(
                 _cleanup_free_ char *word = NULL, *name = NULL;
                 int num;
 
-                r = extract_first_word(&p, &word, NULL, 0);
+                r = extract_first_word(&p, &word, /* separators= */ WHITESPACE ",", 0);
                 if (r == -ENOMEM)
                         return log_oom();
                 if (r < 0) {
@@ -3433,7 +3433,7 @@ int config_parse_syscall_log(
         for (;;) {
                 _cleanup_free_ char *word = NULL;
 
-                r = extract_first_word(&p, &word, NULL, 0);
+                r = extract_first_word(&p, &word, /* separators= */ WHITESPACE ",", 0);
                 if (r == -ENOMEM)
                         return log_oom();
                 if (r < 0) {
@@ -3686,7 +3686,7 @@ int config_parse_restrict_filesystems(
         for (const char *p = rvalue;;) {
                 _cleanup_free_ char *word = NULL;
 
-                r = extract_first_word(&p, &word, NULL, EXTRACT_UNQUOTE);
+                r = extract_first_word(&p, &word, /* separators= */ WHITESPACE ",", EXTRACT_UNQUOTE);
                 if (r == 0)
                         break;
                 if (r == -ENOMEM)
@@ -4645,6 +4645,12 @@ int config_parse_exec_directories(
                         r = path_simplify_and_warn(dresolved, PATH_CHECK_RELATIVE, unit, filename, line, lvalue);
                         if (r < 0)
                                 continue;
+
+                        if (path_startswith(dresolved, "private")) {
+                                log_syntax(unit, LOG_WARNING, filename, line, 0,
+                                           "%s= symlink can't be 'private', ignoring assignment: %s", lvalue, tuple);
+                                continue;
+                        }
                 }
 
                 ExecDirectoryFlags exec_directory_flags = exec_directory_flags_from_string(flags);
@@ -6015,7 +6021,7 @@ int config_parse_restrict_network_interfaces(
         for (const char *p = rvalue;;) {
                 _cleanup_free_ char *word = NULL;
 
-                r = extract_first_word(&p, &word, NULL, EXTRACT_UNQUOTE);
+                r = extract_first_word(&p, &word, /* separators= */ WHITESPACE ",", EXTRACT_UNQUOTE);
                 if (r == 0)
                         break;
                 if (r == -ENOMEM)
@@ -6541,7 +6547,7 @@ int config_parse_output_restricted(
                         return 0;
                 }
 
-                if (IN_SET(t, EXEC_OUTPUT_SOCKET, EXEC_OUTPUT_NAMED_FD, EXEC_OUTPUT_FILE, EXEC_OUTPUT_FILE_APPEND, EXEC_OUTPUT_FILE_TRUNCATE)) {
+                if (IN_SET(t, EXEC_OUTPUT_SOCKET, EXEC_OUTPUT_NAMED_FD) || exec_output_is_file(t)) {
                         log_syntax(unit, LOG_WARNING, filename, line, 0, "Standard output types socket, fd:, file:, append:, truncate: are not supported as defaults, ignoring: %s", rvalue);
                         return 0;
                 }

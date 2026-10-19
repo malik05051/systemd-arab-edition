@@ -109,7 +109,11 @@ INTROSPECTABLE=(
     systemd-report
     systemd-report-basic
     systemd-report-cgroup
+    systemd-report-diskhealth
+    systemd-report-diskspace
     systemd-report-files
+    systemd-report-hwmon
+    systemd-report-netstat
     systemd-report-sign-plain
     systemd-report-sign-tpm2
     systemd-report-sign-tsm
@@ -140,6 +144,7 @@ INTROSPECTABLE=(
     systemd-udevd
     systemd-umount
     systemd-update-done
+    systemd-update-helper
     systemd-validatefs
     systemd-veritysetup
     systemd-vmspawn
@@ -187,6 +192,9 @@ if command -v kernel-install >/dev/null; then
     kernel-install --introspect-cli | jq -e \
             '[.commands[].names[0]] | sort == ["installkernel", "kernel-install"]'
 fi
+
+networkctl --introspect-cli | jq -e \
+    '[.commands[].names[0]] | sort == ["networkctl", "systemd-networkd"]'
 
 resolvectl --introspect-cli | jq -e \
     '[.commands[].names[0]] | sort == ["resolvconf", "resolvectl", "systemd-resolve"]'

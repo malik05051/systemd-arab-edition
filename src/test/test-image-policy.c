@@ -130,6 +130,12 @@ TEST_RET(test_image_policy_to_string) {
         assert_se(image_policy_from_string("root=grbl", /* graceful= */ true, NULL) == 0);
         assert_se(image_policy_from_string("wowza=grbl", /* graceful= */ true, NULL) == 0);
 
+        _cleanup_(image_policy_freep) ImagePolicy *a = NULL, *b = NULL;
+        ASSERT_OK(image_policy_from_string("root-vty=verity:usr-vsig=signed", /* graceful= */ false, &a));
+        ASSERT_OK(image_policy_from_string("root-verity=verity:usr-verity-sig=signed", /* graceful= */ false, &b));
+        ASSERT_TRUE(image_policy_equal(a, b));
+        ASSERT_ERROR(image_policy_from_string("root-vty=verity:root-verity=signed", /* graceful= */ false, NULL), ENOTUNIQ);
+
         return 0;
 }
 
@@ -604,9 +610,9 @@ TEST(image_policy_new_from_dissected) {
 
         policy = image_policy_free(policy);
 
-        /* Test 17: single_file_system=true should NOT set growfs or read-only flags */
+        /* Test 17: bare file system images should NOT set growfs or read-only flags */
         image = (DissectedImage) {
-                .single_file_system = true,
+                .partition_table_type = PARTITION_BARE,
                 .partitions = {
                         [PARTITION_ROOT] = {
                                 .found = true,
@@ -619,7 +625,7 @@ TEST(image_policy_new_from_dissected) {
 
         policy = image_policy_new_from_dissected(&image, /* verity= */ NULL);
         ASSERT_NOT_NULL(policy);
-        /* single_file_system=true means no growfs/read-only flags */
+        /* bare file system images have no growfs/read-only flags */
         ASSERT_EQ(policy->policies[PARTITION_ROOT].flags, (PartitionPolicyFlags) PARTITION_POLICY_EXT4);
 
         policy = image_policy_free(policy);
