@@ -42,6 +42,15 @@ EOF
 
 TS="${SOURCE_DATE_EPOCH:-$(date +%s)}"
 
+# The version the packages carry. By default it follows the source, which during development is a
+# tilde version such as 263~devel, with the build time as the release so that every build upgrades
+# over the last. Packages published in a repository want a version chosen by hand instead, hence the
+# overrides:
+#
+#     mkosi -d arch -E PACKAGE_VERSION=262.1 -E PACKAGE_RELEASE=1 ...
+PKGVER="${PACKAGE_VERSION:-$(cat meson.version)}"
+PKGREL="${PACKAGE_RELEASE:-$(date "+%Y%m%d%H%M%S" --date "@$TS")}"
+
 # The packaging repository still spells the power-off command "poweroff", but we install it as
 # "bismillah", so the file lists in package_systemd() and the symlinks package_systemd-sysvcompat()
 # creates have to be renamed along with it. Both substitutions are anchored on the surrounding text
@@ -51,8 +60,8 @@ sed "pkg/$PKG_SUBDIR/PKGBUILD" \
     --expression "/-Dsysvrcnd-path=/d" \
     --expression "/{halt,/ s/poweroff/bismillah/" \
     --expression "/for tool in halt / s/poweroff/bismillah/" \
-    --expression "s/^pkgver=.*/pkgver=$(cat meson.version)/" \
-    --expression "s/^pkgrel=.*/pkgrel=$(date "+%Y%m%d%H%M%S" --date "@$TS")/" >/tmp/PKGBUILD
+    --expression "s/^pkgver=.*/pkgver=$PKGVER/" \
+    --expression "s/^pkgrel=.*/pkgrel=$PKGREL/" >/tmp/PKGBUILD
 
 # If the packaging repository moved those lines around, the substitutions above quietly do nothing and
 # the build fails much later with a confusing "rm: cannot remove …/poweroff" instead, so check here.
