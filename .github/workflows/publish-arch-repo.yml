@@ -1,0 +1,120 @@
+---
+# vi: ts=2 sw=2 et:
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# Build the Arch packages and publish them as the pacman repository, on demand.
+name: Publish Arch repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build the packages but do not touch the release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: systemd/mkosi@131adaca5eb5f1551bc564ae4497ff940890a374
+
+      # Freeing up disk space with rm -rf can take multiple minutes. Since we don't need the extra free space
+      # immediately, we remove the files in the background. However, we first move them to a different location
+      # so that nothing tries to use anything in these directories anymore while we're busy deleting them.
+      - name: Free disk space
+        run: |
+          sudo mv /usr/local /usr/local.trash
+          sudo mv /opt/hostedtoolcache /opt/hostedtoolcache.trash
+          sudo systemd-run rm -rf /usr/local.trash /opt/hostedtoolcache.trash
+
+      - name: Btrfs
+        run: |
+          truncate --size=100G btrfs.raw
+          mkfs.btrfs btrfs.raw
+          sudo mkdir -p /mnt/mkosi
+          LOOP="$(sudo losetup --find --show --direct-io=on btrfs.raw)"
+          rm -f btrfs.raw
+          sudo mount "$LOOP" /mnt/mkosi --options compress=zstd:1,user_subvol_rm_allowed,noatime,discard=async,space_cache=v2
+          sudo chown "$(id -u):$(id -g)" /mnt/mkosi
+          mkdir -p /mnt/mkosi/tmp
+          echo "TMPDIR=/mnt/mkosi/tmp" >>"$GITHUB_ENV"
+          ln -sf /mnt/mkosi/build build
+
+      - name: Configure
+        run: |
+          tee mkosi/mkosi.local.conf <<EOF
+          [Build]
+          UseSubvolumes=yes
+          ToolsTreeDistribution=arch
+          EOF
+
+      # RENAME_PACKAGES builds them under the names the repository publishes, and stops mkosi building
+      # images it could no longer populate with them.
+      - name: Build
+        run: mkosi -d arch -E RENAME_PACKAGES=1 -t none -f
+
+      - name: Collect
+        run: |
+          mkdir -p packages
+          find build/mkosi.builddir \( -name '*.pkg.tar' -o -name '*.pkg.tar.zst' \) -exec cp -t packages {} +
+          ls -l packages
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: packages/
+          retention-days: 1
+
+  publish:
+    needs: build
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-24.04
+    # repo-add comes with pacman, which only exists on Arch, so sign and publish from there.
+    container: archlinux:latest
+    steps:
+      - name: Install the tools the publish script needs
+        run: pacman -Sy --needed --noconfirm pacman gnupg zstd github-cli
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: packages
+
+      # The container runs as root, which is fine: gpg reads root's own keyring here, rather than
+      # being cut off from somebody else's by sudo.
+      - name: Import the signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          install -d -m0700 "$HOME/.gnupg"
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          if [[ -n "$GPG_PASSPHRASE" ]]; then
+            # repo-add signs through gpg without passing a passphrase itself, so the agent has to be
+            # able to take one from us rather than from a terminal nobody is sitting at.
+            printf 'allow-loopback-pinentry\n' >"$HOME/.gnupg/gpg-agent.conf"
+            printf '%s' "$GPG_PASSPHRASE" >"$HOME/.gnupg/passphrase"
+            chmod 0600 "$HOME/.gnupg/passphrase"
+            printf 'pinentry-mode loopback\npassphrase-file %s/.gnupg/passphrase\n' "$HOME" >>"$HOME/.gnupg/gpg.conf"
+            gpgconf --kill gpg-agent
+          fi
+          gpg --list-secret-keys --keyid-format=long
+
+      - name: Publish
+        env:
+          # The release lives in another repository, which GITHUB_TOKEN does not reach.
+          GH_TOKEN: ${{ secrets.PACMAN_REPO_TOKEN }}
+          GPGKEY: ${{ vars.GPGKEY }}
+          BUILD_DIR: ${{ github.workspace }}/packages
+          REPO_DIR: ${{ github.workspace }}/arch-repo
+        run: tools/publish-arch-repo.sh
