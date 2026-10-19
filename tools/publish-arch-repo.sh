@@ -20,19 +20,41 @@ GITHUB_REPO="${GITHUB_REPO:-malik05051/malik05-repo}"
 RELEASE_TAG="${RELEASE_TAG:-repo}"
 BUILD_DIR="${BUILD_DIR:-$SRCDIR/build/mkosi.builddir}"
 
-# Signing needs the invoking user's gpg keyring and agent, which root does not have: under sudo the
-# key is simply "not in your keyring". The repository directory therefore has to belong to that
-# user, so that none of this needs privileges at all.
-if [[ "$(id -u)" -eq 0 ]]; then
-    echo "Run this as yourself, not as root: signing needs your gpg keyring." >&2
+for tool in repo-add zstd gh gpg; do
+    command -v "$tool" >/dev/null || { echo "$tool is not installed." >&2; exit 1; }
+done
+
+# The database is signed, and the key is configured for makepkg, which reads these files in this
+# order, so read it the same way rather than asking for it a second time. They are somebody else's
+# configuration files, so neither their unset variables nor their exit statuses are ours to trip
+# over.
+if [[ -z "${GPGKEY:-}" ]]; then
+    set +eu
+    for conf in /etc/makepkg.conf \
+                "${XDG_CONFIG_HOME:-$HOME/.config}/pacman/makepkg.conf" \
+                "$HOME/.makepkg.conf"; do
+        # shellcheck source=/dev/null
+        [[ -r "$conf" ]] && source "$conf"
+    done
+    set -eu
+fi
+
+if [[ -z "${GPGKEY:-}" ]]; then
+    echo "GPGKEY is set neither in the environment nor in makepkg.conf, so the database cannot be" >&2
+    echo "signed and nobody could check the signature if it were." >&2
+    exit 1
+fi
+
+# Check the key is reachable before doing any work, rather than after the packages have been copied
+# and compressed. Running under sudo is the usual reason it is not: the key lives in the invoking
+# user's keyring, and root's is a different one, where it is simply "not in your keyring".
+if ! gpg --list-secret-keys "$GPGKEY" >/dev/null 2>&1; then
+    echo "gpg has no secret key $GPGKEY in the keyring it is reading." >&2
+    echo "Running under sudo is the usual reason: that keyring belongs to root, not to you." >&2
     echo "If $REPO_DIR is owned by root, hand it over once with" >&2
     echo "    sudo chown -R \"\$USER\" $REPO_DIR" >&2
     exit 1
 fi
-
-for tool in repo-add zstd gh; do
-    command -v "$tool" >/dev/null || { echo "$tool is not installed." >&2; exit 1; }
-done
 
 mapfile -t packages < <(find "$BUILD_DIR" -name '*.pkg.tar' -o -name '*.pkg.tar.zst' | sort)
 if [[ "${#packages[@]}" -eq 0 ]]; then
@@ -71,27 +93,6 @@ shopt -u nullglob
 
 # --sign takes the key from GPGKEY in makepkg.conf, or pass --key here.
 repo-add --sign "$REPO_NAME.db.tar.zst" ./*.pkg.tar.zst
-
-# A signed database is of no use to anyone who cannot check the signature, so publish the public key
-# beside it. The key is configured for makepkg, which reads these files in this order, so read them
-# the same way rather than asking for it a second time. They are other people's configuration, so
-# neither their unset variables nor their exit statuses are ours to trip over.
-if [[ -z "${GPGKEY:-}" ]]; then
-    set +eu
-    for conf in /etc/makepkg.conf \
-                "${XDG_CONFIG_HOME:-$HOME/.config}/pacman/makepkg.conf" \
-                "$HOME/.makepkg.conf"; do
-        # shellcheck source=/dev/null
-        [[ -r "$conf" ]] && source "$conf"
-    done
-    set -eu
-fi
-
-if [[ -z "${GPGKEY:-}" ]]; then
-    echo "The database is signed but GPGKEY is set neither in the environment nor in makepkg.conf," >&2
-    echo "so the public key cannot be published and nobody else can check that signature." >&2
-    exit 1
-fi
 
 gpg --export --armor "$GPGKEY" > key.asc
 
