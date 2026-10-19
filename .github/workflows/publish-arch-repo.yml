@@ -7,6 +7,10 @@ name: Publish Arch repository
 on:
   workflow_dispatch:
     inputs:
+      version:
+        description: "Package version as <pkgver>-<pkgrel>, e.g. 262.1-1. Empty follows meson.version."
+        type: string
+        default: ""
       dry-run:
         description: Build the packages but do not touch the release
         type: boolean
@@ -62,7 +66,24 @@ jobs:
       # RENAME_PACKAGES builds them under the names the repository publishes, and stops mkosi building
       # images it could no longer populate with them.
       - name: Build
-        run: mkosi -d arch -E RENAME_PACKAGES=1 -t none -f
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          args=(-d arch -E RENAME_PACKAGES=1 -t none -f)
+
+          # Left empty the packages follow meson.version, which during development is a tilde version
+          # such as 263~devel that sorts above the release it precedes. A repository wants a version
+          # chosen by hand, so take one and check it is one pacman can compare: pkgver may not carry
+          # the - that separates it from pkgrel, nor the : that would make it an epoch.
+          if [[ -n "$VERSION" ]]; then
+            if [[ ! "$VERSION" =~ ^[A-Za-z0-9._+]+-[0-9]+$ ]]; then
+              echo "version must be <pkgver>-<pkgrel>, e.g. 262.1-1, got '$VERSION'." >&2
+              exit 1
+            fi
+            args+=(-E "PACKAGE_VERSION=${VERSION%-*}" -E "PACKAGE_RELEASE=${VERSION##*-}")
+          fi
+
+          mkosi "${args[@]}"
 
       - name: Collect
         run: |
@@ -120,6 +141,8 @@ jobs:
           # The release lives in another repository, which GITHUB_TOKEN does not reach.
           GH_TOKEN: ${{ secrets.PACMAN_REPO_TOKEN }}
           GPGKEY: ${{ vars.GPGKEY }}
+          # Only so the release is titled after what it actually holds.
+          PACKAGE_VERSION: ${{ inputs.version }}
           BUILD_DIR: ${{ github.workspace }}/packages
           REPO_DIR: ${{ github.workspace }}/arch-repo
         run: tools/publish-arch-repo.sh

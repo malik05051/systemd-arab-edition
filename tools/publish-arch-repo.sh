@@ -110,7 +110,7 @@ for required in "$REPO_NAME".db "$REPO_NAME".db.sig "$REPO_NAME".files "$REPO_NA
     [[ -s "$required" ]] || { echo "$required is missing or empty, not publishing." >&2; exit 1; }
 done
 
-version="$(cat "$SRCDIR/meson.version" 2>/dev/null || echo unknown)"
+version="${PACKAGE_VERSION:-$(cat "$SRCDIR/meson.version" 2>/dev/null || echo unknown)}"
 
 published=( ./*.pkg.tar.zst )
 echo "Publishing ${#published[@]} packages as $GITHUB_REPO release '$RELEASE_TAG'."
