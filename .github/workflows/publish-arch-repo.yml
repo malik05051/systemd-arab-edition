@@ -122,9 +122,24 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPGKEY: ${{ vars.GPGKEY }}
         run: |
           install -d -m0700 "$HOME/.gnupg"
-          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+          # gpg exits non-zero over a cosmetic armor complaint while importing the key perfectly
+          # well: an armored block whose headers are not separated from the base64 by a blank line
+          # makes the first data line look like a malformed header, and gpg says so, skips it, and
+          # still imports. So let the import speak for itself and judge it by what it left behind.
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import || \
+            echo "gpg --import exited $?; checking for the key anyway." >&2
+
+          if ! gpg --list-secret-keys "$GPGKEY" >/dev/null 2>&1; then
+            echo "Secret key $GPGKEY is not in the keyring after importing GPG_PRIVATE_KEY." >&2
+            echo "The secret has to be the armored key itself, from" >&2
+            echo "    gpg --export-secret-keys --armor $GPGKEY" >&2
+            echo "not the fingerprint, and vars.GPGKEY has to name that same key." >&2
+            exit 1
+          fi
           if [[ -n "$GPG_PASSPHRASE" ]]; then
             # repo-add signs through gpg without passing a passphrase itself, so the agent has to be
             # able to take one from us rather than from a terminal nobody is sitting at.
