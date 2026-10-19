@@ -52,6 +52,11 @@ jobs:
           [Build]
           UseSubvolumes=yes
           ToolsTreeDistribution=arch
+
+          # Both have to live on the btrfs mount: the subvolumes are made under the workspace, and
+          # the default workspace is ~/.cache, which is the runner's own ext4.
+          WorkspaceDirectory=$TMPDIR
+          PackageCacheDirectory=$TMPDIR/cache
           EOF
 
       # RENAME_PACKAGES builds them under the names the repository publishes, and stops mkosi building
